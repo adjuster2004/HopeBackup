@@ -83,3 +83,27 @@ C:\HopeBackup\_deploy\deploy.cmd 10.0.0.5  ubuntu server    :: сервер уп
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/API.md](docs/API.md),
 [docs/05_Дорожная_карта.md](docs/05_Дорожная_карта.md), 
 [README_GIT.md](README_GIT.md) — репозиторий на GitHub и выпуски.
+
+## Скриншоты
+
+<img width="657" height="651" alt="image" src="https://github.com/user-attachments/assets/b4f6fc5b-aeb2-48f2-8e07-105e219ca6b3" />
+
+<img width="1261" height="648" alt="image" src="https://github.com/user-attachments/assets/79ace00b-eea3-4371-b7fa-119adf35a6c4" />
+
+<img width="1091" height="653" alt="image" src="https://github.com/user-attachments/assets/e359d01c-0842-410a-acef-23445ce2ab4c" />
+
+<img width="1125" height="651" alt="image" src="https://github.com/user-attachments/assets/4981ea3d-e43c-4de8-836a-a149f578796e" />
+
+<img width="1023" height="652" alt="image" src="https://github.com/user-attachments/assets/ba428b6e-4c8d-4b3f-b91b-c28e669bffa6" />
+
+<img width="1251" height="648" alt="image" src="https://github.com/user-attachments/assets/ced48f76-a72d-4810-b059-13cfa91debef" />
+
+<img width="1249" height="663" alt="image" src="https://github.com/user-attachments/assets/ce44bd9a-34bd-4e7d-9590-c2a7becadf56" />
+
+<img width="1254" height="653" alt="image" src="https://github.com/user-attachments/assets/2dbcfc1d-a235-4170-9ceb-374f81e75dae" />
+
+<img width="1147" height="667" alt="image" src="https://github.com/user-attachments/assets/c9078ce4-121b-41ee-ade7-c856781d9aab" />
+
+<img width="1260" height="343" alt="image" src="https://github.com/user-attachments/assets/dda570a0-4783-4197-b11a-0a40a5404306" />
+
+<img width="1272" height="653" alt="image" src="https://github.com/user-attachments/assets/2f0cc404-1cf3-4b26-a31b-fb8f7f70ca02" />
