@@ -1,0 +1,52 @@
+# HopeBackup «Ковчег» — что НЕ кладём в репозиторий.
+# Исходники, тесты, документация (.md), скрипты установки и развёртывания — в репозитории.
+# Готовые программы и архивы выпусков — в GitHub Releases (см. docs/08_Работа_с_GitHub.md).
+
+# ---------- Сборка ядра (Rust)
+hopebackup-core/target/
+hopebackup-core/target-*/
+hopebackup-next/
+
+# ---------- Панель (React): зависимости и сборка (собирается из исходников: npm ci && npm run build)
+admin/node_modules/
+admin/dist/
+
+# ---------- Готовые программы и выпуски (десятки МБ) — в GitHub Releases, не в git
+bin/
+
+# ---------- Документация: HTML собирается из .md (python3 hopebackup-core/tools/gen_docs.py)
+docs/*.html
+
+# ---------- Журналы. Журнал развёртывания содержит пароль администратора и токены узла!
+_deploy/*.log
+*.log
+
+# ---------- Утилиты Windows для развёртывания (plink.exe, pscp.exe)
+tools/PuTTY/
+
+# ---------- Секреты: никогда в репозиторий
+.env
+.env.*
+*.key
+*.p12
+*.pfx
+*.pem
+initial_admin_password.txt
+recovery_token*.txt
+node.json
+state.json
+# Нужные проекту открытые ключи и тестовый ключ подписи (только для тестов; рабочие сборки ему не доверяют).
+!hopebackup-core/src/server/vendor_public.pem
+!tests/mocks/vendor_test_pub.pem
+!tests/mocks/vendor_test_key.pem
+
+# ---------- Временное, ОС и редакторы
+*.tmp
+*.bak
+*.swp
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/

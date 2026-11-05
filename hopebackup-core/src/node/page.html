@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Узел хранения HopeBackup</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 .6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1'/%3E%3Cpath d='M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4c0 2.9.94 5.34 2.81 7.76'/%3E%3Cpath d='M19 13V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6'/%3E%3Cpath d='M12 10v4'/%3E%3Cpath d='M12 2v3'/%3E%3C/svg%3E">
+<style>
+:root{--bg:#f8fafc;--card:#fff;--line:#e2e8f0;--text:#0f172a;--muted:#64748b;--accent:#2563eb;--accent-soft:#eff6ff;--ok:#10b981;--code:#f1f5f9}
+@media (prefers-color-scheme:dark){:root{--bg:#0b1220;--card:#111a2e;--line:#1f2a44;--text:#e2e8f0;--muted:#94a3b8;--accent:#60a5fa;--accent-soft:#172554;--ok:#34d399;--code:#0f172a}}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--text);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;display:flex;align-items:center;justify-content:center;padding:24px 16px}
+.card{width:100%;max-width:560px;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:36px 36px 28px;box-shadow:0 1px 2px rgba(15,23,42,.04),0 12px 32px -12px rgba(15,23,42,.12)}
+.mark{width:56px;height:56px;border-radius:16px;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;margin-bottom:20px}
+h1{font-size:24px;line-height:1.25;margin:0 0 6px;letter-spacing:-.01em}
+.sub{color:var(--muted);margin:0 0 22px}
+.status{display:inline-flex;align-items:center;gap:8px;font-size:14px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);margin-bottom:22px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 4px color-mix(in srgb,var(--ok) 20%,transparent)}
+.status b{font-weight:600}
+p{margin:0 0 14px}
+.btn{display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:#fff;text-decoration:none;font-weight:600;padding:12px 20px;border-radius:12px;margin:6px 0 18px}
+@media (prefers-color-scheme:dark){.btn{color:#0b1220}}
+.btn:hover{filter:brightness(1.08)}
+.btn:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 45%,transparent);outline-offset:2px}
+.hint{background:var(--accent-soft);border-radius:12px;padding:14px 16px;font-size:15px;margin:6px 0 18px}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.92em;background:var(--code);padding:1px 6px;border-radius:6px;word-break:break-all}
+.foot{border-top:1px solid var(--line);margin-top:8px;padding-top:16px;color:var(--muted);font-size:13px}
+@media (max-width:480px){.card{padding:28px 20px 22px}h1{font-size:21px}}
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="mark" aria-hidden="true">
+    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 .6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4c0 2.9.94 5.34 2.81 7.76"/><path d="M19 13V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6"/><path d="M12 10v4"/><path d="M12 2v3"/></svg>
+  </div>
+  <h1>Узел хранения HopeBackup «Ковчег»</h1>
+  <p class="sub">Здесь лежат резервные копии площадки. Веб-интерфейса у узла нет — им управляет сервер Ковчега.</p>
+  <div class="status"><span class="dot"></span><span>Работает · <b>версия {{VERSION}}</b></span></div>
+  {{PANEL}}
+  <p>Сюда обращаются только сервер управления и агенты — по токенам и с проверкой отпечатка сертификата. Подключите этот узел в панели: <b>Площадки → Добавить площадку</b>, адрес <code>{{SELF}}</code>.</p>
+  <div class="foot">Предупреждение браузера «Не защищено» ожидаемо: сертификат узла самоподписанный, Ковчег доверяет ему по отпечатку.</div>
+</main>
+</body>
+</html>

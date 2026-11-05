@@ -1,0 +1,14 @@
+# Окончания строк. Скрипты для Linux (.sh) обязаны остаться с LF — иначе установщик на сервере не запустится
+# (bash споткнётся о «\r»). Скрипты Windows (.ps1, .cmd) — с CRLF.
+* text=auto eol=lf
+*.ps1 text eol=crlf
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Двоичные файлы — без преобразований.
+*.png binary
+*.jpg binary
+*.ico binary
+*.gz binary
+*.qcow2 binary
+*.pdf binary

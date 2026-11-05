@@ -1,0 +1,98 @@
+HopeBackup — сборка и запуск для разработки
+===========================================
+
+Требуется Linux (агент и сервер используют /proc, setuid, OpenSSH).
+
+0) Установка готовой версии на Linux-сервер (без сборки):
+   положите в /tmp два файла из bin/release — hopebackup-<версия>-linux.tar.gz и hopebackup-install.sh,
+   затем от root:  sh /tmp/hopebackup-install.sh            (спросит роль: server, node, agent)
+                   sh /tmp/hopebackup-install.sh server     (или node; agent --server … --token … --fingerprint …)
+   Подробно — docs/01_Установка.md, раздел 3.
+
+1) Веб-панель (React):
+   cd HopeBackup/admin
+   npm install
+   npm run dev          -> http://localhost:5173/  (прокси /api -> https://127.0.0.1:4443)
+   npm run build        -> admin/dist (встраивается в бинарник при сборке ядра)
+
+2) Ядро (Rust):
+   cd HopeBackup/hopebackup-core
+   cargo test                                             (движок хранения, разбор tar, версии PostgreSQL,
+                                                           SigV4, профили OpenVPN, конфиги IPsec/WireGuard,
+                                                           исключения, разбор cron, ответы WebDAV)
+   hopebackup inventory                                   опись этой машины (что найдёт «Сервер Linux целиком»)
+   cargo build --release
+
+   Стенд на одной машине (каталоги в /tmp):
+   hopebackup node init --data /tmp/n --listen 127.0.0.1:8443      -> токены и отпечаток
+   hopebackup node run  --data /tmp/n
+   HOPEBACKUP_DATA=/tmp/s hopebackup server --listen 127.0.0.1:4443 -> https://127.0.0.1:4443/,
+                                                                       пароль — /tmp/s/server/initial_admin_password.txt
+   HOPEBACKUP_DATA=/tmp/a hopebackup agent enroll --server https://127.0.0.1:4443 --token … --fingerprint …
+   HOPEBACKUP_DATA=/tmp/a hopebackup agent run
+
+   Проверки на одной машине (root; jq, curl; сценарии сами описывают требования в начале файла):
+   BIN=hopebackup-core/target/release/hopebackup tests/e2e.sh      PostgreSQL → площадка → PITR по SSH и на новые ВМ
+                                                                    (Proxmox/VMware/Yandex — имитаторы tests/mocks,
+                                                                    AWS — moto); KEEP=1 — оставить стенд работать
+   BIN=… tests/vpn.sh       OpenVPN и WireGuard: площадка в netns, доступ только через туннель
+   BIN=… tests/s3.sh        площадка S3 (moto): Object Lock, дедупликация, очистка, агент через сервер
+   BIN=… tests/cluster.sh   принимающая площадка и узел управления, потеря основной площадки
+   BIN=… tests/plugins.sh   плагины S3, Vault, GitLab через `hopebackup repo`
+   BIN=… tests/host.sh      сервер Linux целиком: опись, копия, восстановление пользователей и приложений
+   BIN=… tests/machines.sh  серверы и ВМ по SSH: пароль и ключ, sudo с паролем, ключ хоста, опись, анализ, установка агента
+   BIN=… tests/storage.sh   площадки: диск сервера, Nextcloud/WebDAV (wsgidav), Яндекс Диск и Google Диск (имитаторы)
+   BIN=… [BIN_TESTKEY=…] tests/notify.sh   почта (заглушка SMTP), «Забыли пароль?», уведомления; с BIN_TESTKEY —
+                                            аварийный токен (сборка: HOPEBACKUP_TEST_VENDOR_PUBKEY=$PWD/tests/mocks/vendor_test_pub.pem
+                                            cargo build --release --features testkey --target-dir target-testkey)
+   BIN=… DIST=bin/dist tests/arch.sh       Alpine без glibc и ARM64 (qemu-user-static, busybox-static, libc6-arm64-cross)
+   BIN=… tests/resilience.sh   сервер, агент, площадка падают посреди копии: итог из outbox, ожидание площадки, повторы, сверка, догон
+   BIN=… tests/snapshot.sh     снимки ФС перед файловой копией: btrfs (loop-диск), LVM (имитация команд); нужны root и btrfs-progs
+   tests/install.sh            установочный скрипт из bin/release: systemd (имитация), Alpine/busybox с OpenRC (имитация), обновление, удаление
+   BIN=… tests/hope.sh         продукты Hope: Mail Server, MSG Gateway, HopeInventory, HopeDFS (xattr), HopeDC (ключ, rejoin)
+   BIN=… tests/dbms.sh         СУБД: настоящие MariaDB (дамп, mariabackup, binlog, PITR) и Redis (AOF);
+                               имитации MS SQL (sqlcmd), MongoDB, ClickHouse; ONLY="mysql redis" — выборочно
+   BIN=… tests/apps.sh         настоящие OpenLDAP, Zabbix на MariaDB, Grafana на SQLite, etcd; Jenkins, Nexus;
+                               имитации Keycloak, Docker, Harbor, Kubernetes, OpenSearch, FreeIPA
+   BIN=… tests/vm.sh           образы ВМ: настоящий libvirt/QEMU (и по SSH), OpenNebula/SpaceVM/VMmanager с libvirt узла;
+                               имитации Proxmox, oVirt, OpenStack, Nutanix, XAPI, vSphere (SOAP/NFC)
+                               нужны: mariadb-server mariadb-backup redis-server slapd ldap-utils sqlite3
+                               libvirt-daemon-system qemu-system-x86 qemu-utils etcd-server etcd-client
+   Python-зависимости имитаторов: pip install --break-system-packages moto[server] boto3 wsgidav cheroot
+
+3) Release-бинарник под glibc 2.17 (CentOS/RHEL 7+, Debian 8+, Ubuntu 14.04+, SLES 12+, Astra, РЕД ОС, ALT):
+   pip install ziglang && cargo install cargo-zigbuild
+   cd admin && npm run build && cd ../hopebackup-core
+   cargo zigbuild --release --target x86_64-unknown-linux-gnu.2.17
+   gzip -9 -c target/x86_64-unknown-linux-gnu/release/hopebackup > ../bin/hopebackup.gz
+   cd .. && sha256sum bin/hopebackup.gz > bin/hopebackup.gz.sha256   (deploy сверяет SHA-256)
+   md5sum bin/hopebackup.gz > bin/hopebackup.gz.md5
+
+   ВАЖНО: панель встраивается из admin/dist в момент сборки ядра — собирайте её (npm run build) ПЕРЕД cargo.
+
+3а) Комплект сборок bin/dist: ARM64 и статические musl (Alpine без gcompat):
+   стандартная библиотека для этих целей собирается из исходников той же версии Rust — их кладут в
+   $(rustc --print sysroot)/lib/rustlib/src/rust (library/, library/backtrace, src/llvm-project/libunwind из GitHub
+   rust-lang/rust, rust-lang/backtrace-rs, rust-lang/llvm-project по коммитам из `rustc -vV` и .gitmodules);
+   либо `rustup target add aarch64-unknown-linux-gnu x86_64-unknown-linux-musl aarch64-unknown-linux-musl`.
+   export RUSTC_BOOTSTRAP=1
+   cargo zigbuild --release --target aarch64-unknown-linux-gnu.2.17 -Zbuild-std=std,panic_abort --target-dir target-cross
+   RUSTFLAGS="-C link-self-contained=no -C target-feature=+crt-static" \
+     cargo zigbuild --release --target x86_64-unknown-linux-musl  -Zbuild-std=std,panic_abort --target-dir target-cross
+   RUSTFLAGS="-C link-self-contained=no -C target-feature=+crt-static" \
+     cargo zigbuild --release --target aarch64-unknown-linux-musl -Zbuild-std=std,panic_abort --target-dir target-cross
+   gzip -9 -c <сборка> > ../bin/dist/hopebackup-<арх>-<gnu|musl>.gz  (+ .sha256), x86_64-gnu — копия основной
+
+4) Установка на сервер: _deploy\deploy.cmd <IP> <пользователь> server|node|agent   (см. docs\01_Установка.md)
+   Пакеты VPN: deploy.ps1 … -Vpn openvpn,wireguard,l2tp,ipsec  (или VPN=… для install.sh)
+
+Переменные окружения:
+   HOPEBACKUP_DATA       каталог сервера/агента (/var/lib/hopebackup)
+   HOPEBACKUP_NODE_DATA  каталог узла (/var/lib/hopebackup-node)
+   HOPEBACKUP_LISTEN     адрес сервера (0.0.0.0:4443)
+   HOPEBACKUP_LOG        фильтр журнала (hopebackup=debug)
+   HOPEBACKUP_DIST       каталог комплекта сборок для машин (иначе <каталог программы>/dist, /opt/hopebackup/dist)
+   HOPEBACKUP_URL / _REPO / _TOKEN / _FINGERPRINT / _PASSWORD — для команд `hopebackup repo …`
+
+Контракт API панели: docs/API.md. Новые обработчики защищены правами по умолчанию (GET — просмотр,
+остальное — изменение; /api/restore — восстановление; /api/users — администратор).

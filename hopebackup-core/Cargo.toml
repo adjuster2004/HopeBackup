@@ -1,0 +1,96 @@
+[package]
+name = "hopebackup"
+version = "0.9.5"
+edition = "2021"
+description = "HopeBackup — резервное копирование инфраструктуры на удалённые площадки и восстановление"
+license = "Proprietary"
+
+[[bin]]
+name = "hopebackup"
+path = "src/main.rs"
+
+[dependencies]
+# Асинхронный рантайм
+tokio = { version = "1.40", features = ["full"] }
+futures = "0.3"
+async-trait = "0.1"
+bytes = "1"
+
+# Ошибки, логирование, CLI
+anyhow = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+clap = { version = "4", features = ["derive", "env"] }
+
+# Сериализация
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+
+# Утилиты
+uuid = { version = "1", features = ["v4", "serde"] }
+rand = "0.8"
+hex = "0.4"
+base64 = "0.22"
+chrono = { version = "0.4", features = ["serde"] }
+libc = "0.2"
+parking_lot = "0.12"
+once_cell = "1"
+rayon = "1"
+croner = "2"
+tar = "0.4"
+
+# Движок хранения: нарезка по содержимому, идентификаторы блоков, сжатие, шифрование
+fastcdc = "3"
+blake3 = "1"
+zstd = "0.13"
+lettre = { version = "0.11", default-features = false, features = ["builder", "hostname", "smtp-transport", "tokio1", "tokio1-rustls", "ring", "webpki-roots"] }
+jsonwebtoken = "9"
+flate2 = "1"
+chacha20poly1305 = "0.10"
+argon2 = "0.5"
+x25519-dalek = { version = "2", features = ["static_secrets"] }
+
+# Пароли панели, токены, отпечатки сертификатов (как в HopeDFS)
+sha2 = "0.10"
+md-5 = "0.10"
+hmac = "0.12"
+pbkdf2 = { version = "0.12", default-features = false, features = ["hmac"] }
+subtle = "2"
+
+# HTTPS: панель, API агентов, узел хранения
+axum = { version = "0.7", features = ["multipart"] }
+axum-server = { version = "0.7", features = ["tls-rustls-no-provider"] }
+rustls = { version = "0.23", default-features = false, features = ["ring", "logging", "tls12", "std"] }
+ring = "0.17"
+rcgen = { version = "0.13", default-features = false, features = ["ring", "pem"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "stream"] }
+tower-http = { version = "0.5", features = ["cors"] }
+tower = { version = "0.5", features = ["util"] }
+rust-embed = "8"
+mime_guess = "2"
+tokio-util = { version = "0.7", features = ["io", "io-util"] }
+tempfile = "3"
+russh = { version = "0.64", default-features = false, features = ["ring", "rsa", "flate2"] }
+
+[dev-dependencies]
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 4
+strip = true
+panic = "unwind"
+
+[features]
+# Тестовый открытый ключ вендора вместо вшитого (аварийное восстановление доступа в tests/notify.sh):
+# HOPEBACKUP_TEST_VENDOR_PUBKEY=/путь/к/ключу.pem cargo build --features testkey
+testkey = []
+
+# Быстрая сборка для разработки и сквозных тестов: без LTO, инкрементально. В релиз не идёт.
+[profile.fast]
+inherits = "release"
+opt-level = 1
+lto = false
+codegen-units = 16
+incremental = true
+strip = false
