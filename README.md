@@ -4,14 +4,16 @@ HopeBackup снимает консистентные копии продукто
 HopeDC; PostgreSQL 14+, qdatabase, MySQL/MariaDB, MS SQL Server, MongoDB, Redis, ClickHouse; GitLab, Vault,
 Keycloak, FreeIPA/LDAP, Docker, Kubernetes, Jenkins, Nexus/Harbor, Zabbix/Grafana, Elasticsearch/OpenSearch,
 бакеты S3, nginx, HAProxy, OpenVPN, файлы, Linux-сервер целиком, образы ВМ libvirt, Proxmox, oVirt/zVirt, OpenNebula,
-OpenStack, vSphere, XCP-ng, Nutanix, SpaceVM, VMmanager), передаёт на площадки, которые выбирает администратор, — свои
-узлы хранения, большой диск сервера управления, Yandex Object Storage, AWS S3, MinIO, Google Диск, Яндекс Диск,
+OpenStack, vSphere, XCP-ng, Nutanix, SpaceVM, VMmanager), передаёт на площадки, которые выбирает администратор.
+
+Cвои узлы хранения, большой диск сервера управления, Yandex Object Storage, AWS S3, MinIO, Google Диск, Яндекс Диск,
 Nextcloud — только новые, сжатые и зашифрованные блоки и восстанавливает систему на «чистый» сервер, новую ВМ
-в Proxmox VE, VMware vSphere, Yandex Cloud или AWS — в том числе на заданный момент времени. Модуль «Переезд»
-переносит работающие Linux-машины (VMware, vCloud Director, Yandex Cloud, «железо») на Proxmox VE и
-zVirt/oVirt/РОСА с коротким простоем: синхронизации изменений, тест без сети, переключение и откат. Принимающие
-узлы на других площадках держат реплику данных и каталога: при потере основной площадки оператор
-принимает управление и восстанавливает инфраструктуру оттуда. Продукт из линейки Hope (HopeDFS, HopeDC):
+в Proxmox VE, VMware vSphere, Yandex Cloud или AWS — в том числе на заданный момент времени. 
+
+Модуль «Переезд» переносит работающие Linux-машины (VMware, vCloud Director, Yandex Cloud, «железо») на Proxmox VE и zVirt/oVirt/РОСА с коротким простоем: синхронизации изменений, тест без сети, переключение и откат.
+
+Принимающие узлы на других площадках держат реплику данных и каталога: при потере основной площадки оператор принимает управление и восстанавливает инфраструктуру оттуда. Продукт из линейки Hope (HopeDFS, HopeDC):
+
 тот же стек (Rust + React/Tailwind), вид панели, роли и права, установка с Windows через PuTTY.
 
 | | |
@@ -75,6 +77,9 @@ C:\HopeBackup\_deploy\deploy.cmd 10.0.0.5  ubuntu server    :: сервер уп
 Перевод панели (RU / EN): строки в коде — `tr("русский текст")`, переводы — `admin/src/i18n_en.ts`. Новые строки
 обернуть: `cd admin && node tools/i18n_wrap.cjs src`; что осталось без перевода: `node tools/i18n_check.cjs`.
 
-Документация: [docs/01_Установка.md](docs/01_Установка.md), [docs/02_Администрирование.md](docs/02_Администрирование.md),
-[docs/03_Аварийное_восстановление.md](docs/03_Аварийное_восстановление.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/API.md](docs/API.md),
-[docs/05_Дорожная_карта.md](docs/05_Дорожная_карта.md), [README_GIT.md](README_GIT.md) — репозиторий на GitHub и выпуски.
+Документация: [docs/01_Установка.md](docs/01_Установка.md), 
+[docs/02_Администрирование.md](docs/02_Администрирование.md),
+[docs/03_Аварийное_восстановление.md](docs/03_Аварийное_восстановление.md),
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/API.md](docs/API.md),
+[docs/05_Дорожная_карта.md](docs/05_Дорожная_карта.md), 
+[README_GIT.md](README_GIT.md) — репозиторий на GitHub и выпуски.
