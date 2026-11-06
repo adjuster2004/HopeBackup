@@ -27,7 +27,10 @@ Windows (PowerShell или Git Bash), папка проекта — `C:\HopeBack
 `.gitattributes` закрепляет окончания строк: скрипты `.sh` всегда с LF (с CRLF установщик на Linux не
 запустится), `.ps1` и `.cmd` — с CRLF.
 
-**Закрытый ключ подписи обновлений вендора в эту папку не класть никогда** — ни в репозиторий, ни рядом.
+**Закрытый ключ вендора в эту папку не класть никогда** — ни в репозиторий, ни рядом. Им подписываются аварийные
+токены восстановления доступа к панели (и лицензии HopeDFS); в программу встроен только открытый ключ
+`vendor_public.pem` — он лишь проверяет подпись и может лежать в открытом репозитории. Пара
+`tests/mocks/vendor_test_*.pem` — тестовая: ей доверяет только тестовая сборка (`--features testkey`).
 
 ## 1. Один раз: GitHub
 
@@ -78,13 +81,43 @@ git ls-files | Select-String -Pattern "\.log$|password|\.env|state\.json|node\.j
 Вывод должен быть пустым. Затем:
 
 ```powershell
-git commit -m "HopeBackup 0.9.4"
+git commit -m "HopeBackup 0.9.5"
 git remote add origin https://github.com/<имя>/HopeBackup.git
 git push -u origin main
 ```
 
 При первом `push` откроется окно входа в GitHub — войдите, Git запомнит вход в «Диспетчере учётных данных
 Windows».
+
+**Ошибка `gpg failed to sign the data` при коммите.** В глобальных настройках Git включена подпись коммитов
+(`commit.gpgsign=true`, обычно осталась от другого проекта или установщика), а GnuPG не установлен или не может
+спросить пароль ключа. Проверить: `git config --show-origin --get commit.gpgsign` и `git config --get gpg.program`.
+Два выхода:
+
+* подпись не нужна — выключить для этого репозитория (глобальная настройка не меняется):
+  `git config commit.gpgsign false`, затем повторить `git commit`;
+* подпись нужна (отметка «Verified» на GitHub) — проще всего подписывать ключом SSH, без GnuPG:
+
+  ```powershell
+  ssh-keygen -t ed25519 -C "hopebackup-signing"          # если ключа ещё нет
+  git config gpg.format ssh
+  git config user.signingkey "$env:USERPROFILE\.ssh\id_ed25519.pub"
+  git config commit.gpgsign true
+  ```
+
+  и добавить тот же `id_ed25519.pub` в GitHub → Settings → SSH and GPG keys → New SSH key → Key type
+  **Signing Key**.
+
+**Ошибка `Invalid username or token. Password authentication is not supported`** при `push` по HTTPS — GitHub не
+принимает пароль учётной записи. Либо вход через браузер (Git Credential Manager: `git config --global
+credential.helper manager`; если в «Диспетчере учётных данных Windows» осталась старая запись — удалить её:
+`cmdkey /list | findstr github`, `cmdkey /delete:git:https://github.com`), либо `gh auth login` и `gh auth setup-git`,
+либо отправка по SSH-ключу: `git remote set-url origin git@github.com:<имя>/HopeBackup.git` (ключ — в GitHub →
+Settings → SSH and GPG keys как **Authentication Key**; проверка — `ssh -T git@github.com`). Один и тот же ключ можно
+добавить и как Authentication, и как Signing Key.
+
+Предупреждение `LF will be replaced by CRLF` для `_deploy/deploy.cmd` — нормально: так задано в `.gitattributes`
+(файлы `.cmd` и `.ps1` хранятся с окончаниями строк Windows).
 
 ## 4. Один раз: настройки репозитория на GitHub
 

@@ -1283,7 +1283,7 @@ dependencies = [
 
 [[package]]
 name = "hopebackup"
-version = "0.9.5"
+version = "0.9.6"
 dependencies = [
  "anyhow",
  "argon2 0.5.3",

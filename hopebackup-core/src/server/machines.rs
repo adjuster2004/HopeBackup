@@ -221,10 +221,16 @@ pub async fn update(State(s): S, Extension(w): Extension<Who>, Path(id): Path<St
     check(&q)?;
     let m = s.store.update(|st| {
         let m = st.machines.iter_mut().find(|m| m.id == id).ok_or_else(|| anyhow!("машина не найдена"))?;
-        // Другой адрес — другой ключ хоста; сохранённые секреты на новый адрес не отправляются.
+        // Другой адрес — другой ключ хоста; сохранённые секреты на новый адрес или другому пользователю не
+        // отправляются: нужен заново только секрет выбранного способа входа (пароль или ключ). Парольная фраза
+        // ключа никуда не передаётся (расшифровывает ключ здесь) — сохраняется. Пароль sudo прежнего пользователя
+        // или адреса сбрасывается: новому он не подходит, а отправлять его туда нельзя.
         let addr_moved = m.host != q.host.trim() || m.port != q.port.unwrap_or(22);
         let moved = addr_moved || m.user != q.user.trim();
-        if moved && (q.password == MASK || q.private_key == MASK || q.sudo_password == MASK || q.key_passphrase == MASK) { bail!("адрес или пользователь изменились — введите пароль или ключ заново"); }
+        let by_key = q.auth == "key";
+        let kept = |new: &str| new == MASK || new.is_empty();
+        if moved && by_key && kept(&q.private_key) { bail!("адрес или пользователь изменились — вставьте закрытый ключ заново"); }
+        if moved && !by_key && kept(&q.password) { bail!("адрес или пользователь изменились — введите пароль заново"); }
         // Ключ хоста принадлежит адресу, а не пользователю: сбрасываем только при смене адреса или порта.
         if addr_moved { m.host_key.clear(); }
         m.name = q.name.trim().into();
@@ -234,11 +240,23 @@ pub async fn update(State(s): S, Extension(w): Extension<Who>, Path(id): Path<St
         m.auth = q.auth.clone();
         m.notes = q.notes.clone();
         if let Some(a) = &q.agent_id { m.agent_id = a.clone(); }
-        let keep = |new: &str, old: &str| if !moved && (new == MASK || new.is_empty()) { old.to_string() } else { new.to_string() };
-        m.password = keep(&q.password, &m.password);
-        m.private_key = { let k = keep(&q.private_key, &m.private_key); if k.trim().is_empty() || k.ends_with('\n') { k } else { k + "\n" } };
-        m.key_passphrase = keep(&q.key_passphrase, &m.key_passphrase);
+        let keep = |new: &str, old: &str| if kept(new) { if moved { String::new() } else { old.to_string() } } else { new.to_string() };
+        // Хранится только секрет выбранного способа входа.
+        m.password = if by_key { String::new() } else { keep(&q.password, &m.password) };
+        if by_key {
+            let new_key = !kept(&q.private_key);
+            m.private_key = { let k = if new_key { q.private_key.clone() } else { m.private_key.clone() }; if k.trim().is_empty() || k.ends_with('\n') { k } else { k + "\n" } };
+            let typed = !kept(&q.key_passphrase);
+            if typed { m.key_passphrase = q.key_passphrase.clone(); }
+            // Новый ключ без шифрования, а сохранена фраза от прежнего — фраза не нужна.
+            if new_key && !typed && !m.key_passphrase.is_empty() && russh::keys::decode_secret_key(m.private_key.trim(), None).is_ok() { m.key_passphrase.clear(); }
+        } else {
+            m.private_key = String::new();
+            m.key_passphrase = String::new();
+        }
         m.sudo_password = keep(&q.sudo_password, &m.sudo_password);
+        if by_key && m.private_key.trim().is_empty() { bail!("вставьте закрытый ключ"); }
+        if !by_key && m.password.is_empty() { bail!("укажите пароль"); }
         if m.auth == "key" && !m.private_key.trim().is_empty() {
             russh::keys::decode_secret_key(m.private_key.trim(), if m.key_passphrase.is_empty() { None } else { Some(m.key_passphrase.as_str()) }).map_err(|e| anyhow!("закрытый ключ: {e}"))?;
         }

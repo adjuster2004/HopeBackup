@@ -1,6 +1,6 @@
 [package]
 name = "hopebackup"
-version = "0.9.5"
+version = "0.9.6"
 edition = "2021"
 description = "HopeBackup — резервное копирование инфраструктуры на удалённые площадки и восстановление"
 license = "Proprietary"

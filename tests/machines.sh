@@ -102,6 +102,15 @@ KEY=$(jq -Rs . < "$W/hbkey")
 M2=$(api POST /machines -d "{\"name\":\"vm-ключ\",\"host\":\"127.0.0.1\",\"port\":$SSH_PORT,\"user\":\"hbkey\",\"auth\":\"key\",\"private_key\":$KEY}" | jq -r .id)
 api POST /machines/$M2/test | jq -e '.ok and .sudo == "sudo без пароля"' >/dev/null || fail "вход по ключу"
 J=$(api POST /machines/$M2/inventory | jq -r .job_id); wait_job "$J" || fail "опись по ключу"
+say "Смена пользователя и способа входа: пароль → ключ (сохранённые пароль и пароль sudo не мешают и не переносятся)"
+M4=$(api POST /machines -d "{\"name\":\"vm-смена\",\"host\":\"127.0.0.1\",\"port\":$SSH_PORT,\"user\":\"hbpw\",\"auth\":\"password\",\"password\":\"$PW\",\"sudo_password\":\"$PW\"}" | jq -r .id)
+api PUT /machines/$M4 -d "{\"name\":\"vm-смена\",\"host\":\"127.0.0.1\",\"port\":$SSH_PORT,\"user\":\"hbkey\",\"auth\":\"password\",\"password\":\"********\",\"sudo_password\":\"********\"}" | jq -r .error | grep -q "введите пароль заново" || fail "смена пользователя с сохранённым паролем должна требовать пароль"
+R=$(api PUT /machines/$M4 -d "{\"name\":\"vm-смена\",\"host\":\"127.0.0.1\",\"port\":$SSH_PORT,\"user\":\"hbkey\",\"auth\":\"key\",\"password\":\"********\",\"private_key\":$KEY,\"key_passphrase\":\"\",\"sudo_password\":\"********\"}")
+echo "$R" | jq -e '.auth == "key" and .user == "hbkey" and (.password == "") and (.sudo_password == "")' >/dev/null || fail "смена на вход по ключу не сохранена: $R"
+api POST /machines/$M4/test | jq -e '.ok and .sudo == "sudo без пароля"' >/dev/null || fail "вход по ключу после смены"
+api PUT /machines/$M4 -d "{\"name\":\"vm-смена\",\"host\":\"127.0.0.1\",\"port\":$SSH_PORT,\"user\":\"hbpw\",\"auth\":\"key\",\"private_key\":\"********\"}" | jq -r .error | grep -q "вставьте закрытый ключ заново" || fail "смена пользователя с сохранённым ключом должна требовать ключ"
+api PUT /machines/$M4 -d "{\"name\":\"vm-смена\",\"host\":\"127.0.0.1\",\"port\":$SSH_PORT,\"user\":\"hbkey\",\"auth\":\"password\",\"password\":\"\"}" | jq -r .error | grep -q "укажите пароль" || fail "вход по паролю без пароля принят"
+api DELETE /machines/$M4 >/dev/null
 M3=$(api POST /machines -d "{\"name\":\"vm-ключ-паролем\",\"host\":\"127.0.0.1\",\"port\":$SSH_PORT,\"user\":\"hbkey\",\"auth\":\"password\",\"password\":\"x\"}" | jq -r .id)
 api POST /machines/$M3/test | jq -r .error | tee "$W/m3.txt"
 grep -q "вход не выполнен" "$W/m3.txt" || fail "пароль для пользователя только с ключом должен быть отклонён"
